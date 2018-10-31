@@ -13,8 +13,11 @@ let paul = new User({
   name: "Paul"
 });
 
+rohan.save();
+paul.save();
+
 // Now create a post along with comments by the above two users
-let posts = new Post({
+let post = new Post({
   title: "Hello World",
   postedBy: rohan._id,
   comments: [
@@ -23,32 +26,73 @@ let posts = new Post({
       postedBy: paul._id
     },
     {
-      text: "Awesome post",
-      postedBy: paul._id
+      text: "Thanks mate",
+      postedBy: rohan._id
     }
   ]
 });
 
-// route to get all the existing Tidal data
-// router.get("/", (req, res, next) => {
-//   User.find({}, (err, docs) => {
-//     if (err) {
-//       return next(err);
-//     }
-//     res.status(200).send(docs);
+post.save(err => {
+  if (err) return next(err);
+  Post.find({})
+    .populate("postedBy")
+    .populate("comments.postedBy")
+    .exec((error, posts) => {
+      console.log(JSON.stringify(posts, null, "\t"));
+    });
+});
+
+// router.post("/", (req, res, next) => {
+//   var posts = new Post(req.body);
+//   posts.save(err => {
+//     if (err) return next(err);
+//     Post.find({})
+//       .populate("postedBy")
+//       .populate("comments.postedBy")
+//       .exec((error, post) => {
+//         console.log(JSON.stringify(posts, null, "\t"));
+//       });
 //   });
 // });
 
-router.post("/", (req, res, next) => {
-  posts.save(err => {
-    if (err) return next(err);
-    Post.find({})
-      .populate("postedBy")
-      .populate("comments.postedBy")
-      .exec((error, post) => {
-        console.log(JSON.stringify(posts, null, "\t"));
-      });
-  });
-});
-
 module.exports = router;
+
+/*
+
+{
+	"title" : "Hello World",
+	"postedBy" : ObjectId("5bd9bbe6a97f642b568cba06"),
+	"comments" : [
+		{
+			"_id" : ObjectId("5bd9bbe6a97f642b568cba0a"),
+			"text" : "Nice post!",
+			"postedBy" : ObjectId("5bd9bbe6a97f642b568cba07")
+		},
+		{
+			"_id" : ObjectId("5bd9bbe6a97f642b568cba09"),
+			"text" : "Thanks :)",
+			"postedBy" : ObjectId("5bd9bbe6a97f642b568cba07")
+		}
+	],
+	"__v" : 0
+}
+{
+	"_id" : ObjectId("5bd9be94540ea82e65649bde"),
+	"title" : "Hello World",
+	"postedBy" : ObjectId("5bd9be94540ea82e65649bdc"),
+	"comments" : [
+		{
+			"_id" : ObjectId("5bd9be94540ea82e65649be0"),
+			"text" : "Nice post!",
+			"postedBy" : ObjectId("5bd9be94540ea82e65649bdd")
+		},
+		{
+			"_id" : ObjectId("5bd9be94540ea82e65649bdf"),
+			"text" : "Thanks :)",
+			"postedBy" : ObjectId("5bd9be94540ea82e65649bdd")
+		}
+	],
+	"__v" : 0
+}
+
+*/
