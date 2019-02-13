@@ -95,6 +95,7 @@ router.post("/", (req, res, next) => {
       });
   });
 });
+
 ```
 
 #### D> Go to Postman > Body Tab > select radio button ‘raw’ > and from the drop-down list select JSON (application / json ) and paste the following json data.
