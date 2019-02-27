@@ -1,5 +1,7 @@
 #### Here I have the model/schema below.
 
+##### ../IES-Rohan-WIP/server/routes/importRoutes.js
+
 #### My Import Model file
 
 ```js
@@ -59,7 +61,7 @@ module.exports = mongoose.model("Import", importSchema);
 
 #### When I send a POST request to add a new item to the schema, it should return me the following (below) in Postman as the new item added (See I have "imported_commodity_name": "silicon-12", as a top-lvel field that has been created in my backend routes file). The key requirement is, for the referenced Model (Commodity), I am passing only the ObjectId for the field 'imported_commodity' but in the returned data, I will need the field 'imported_commodity_name' as a separate top level field with data populated from the referenced Model 'Commodity'
 
-#### The reason I need this variable as a top-level field rather than as a nested object, is because of the sort functionality of Material-UI table. While I was able to render the table rows properly by fetching this value from the nested returned object. But the sort functionality's various functions was becoming too uncontrollable without a top-level file value.
+#### The reason I need this variable as a top-level field rather than as a nested object, is because of the sort functionality of Material-UI table. While I was able to render the table rows properly by fetching this value from the nested returned object. But the sort functionality's various util functions were becoming too uncontrollable without a top-level field value.
 
 #### Here's my Postman POST request body to the API - http://localhost:3000/api/imports
 
@@ -167,7 +169,7 @@ router.post("/", (req, res, next) => {
   });
 });
 
-// ALTERNATIVE - 2 - POST request to add new item WITH async-await - WORKING
+### ALTERNATIVE - 2 - POST request to add new item WITH async-await - WORKING
 router.post("/", async (req, res, next) => {
   let imports = new Import(req.body);
 
@@ -184,7 +186,9 @@ router.post("/", async (req, res, next) => {
   });
 });
 
-// ALTERNATIVE - 3 - POST request to add new item WITH async-await - WORKING
+#### ALTERNATIVE - 3 - POST request to add new item WITH async-await - WORKING
+
+```js
 router.post("/", async (req, res, next) => {
   let imports = await new Import(req.body);
 
@@ -201,9 +205,11 @@ router.post("/", async (req, res, next) => {
     });
   });
 });
+```
 
-// WITHOUT ANY .then(), Promise or async-await, where the nested object's value will not be grabbed at all in the top level returned object from the POST request - WORKING
+#### WITHOUT ANY .then(), Promise or async-await, where the nested object's value will not be grabbed at all in the top level returned object from the POST request - WORKING
 
+```js
 router.post("/", (req, res, next) => {
   let imports = new Import(req.body);
   //   imports.port = req.decoded.port._id || "";
@@ -218,6 +224,50 @@ router.post("/", (req, res, next) => {
   });
 });
 ```
+
+#### However, my final implemented solution to the above problem was completely different. That is, I did not add the new top level field to the db-schema from the nested object. Rather, in the backend routing code, after I fetched the data from mongo, I use Array.map to create a new array and adding a new top-level field ('imported_commodity_objectId') to the data. And as a response to the front-end returned that restructured data. I did that with the below utility function in my backend
+
+```js
+const addCommodityNameFieldToItems = arr => {
+  let newArr = [];
+  arr.map(item => {
+    if (
+      typeof item.imported_commodity_objectId === "object" &&
+      item.imported_commodity_objectId !== null
+    ) {
+      item.imported_commodity_name = item.imported_commodity_objectId.name;
+      newArr.push(item);
+    }
+  });
+  return newArr;
+};
+```
+
+And then the GET request route will do as below
+
+```js
+// Working with imported_commodity_name
+router.get("/", (req, res, next) => {
+  Import.find(
+    {},
+    null,
+    {
+      sort: { createdAt: -1 }
+    },
+    (err, docs) => {
+      if (err) {
+        return next(err);
+      } else {
+        let totalItemsWithCommodityNameField = addCommodityNameFieldToItems(
+          docs
+        );
+        res.status(200).json(totalItemsWithCommodityNameField);
+      }
+    }
+  );
+});
+```
+
 
 #### Other Reading sources
 
