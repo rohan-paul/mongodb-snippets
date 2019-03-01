@@ -268,6 +268,45 @@ router.get("/", (req, res, next) => {
 });
 ```
 
+### VERY IMPORTANT NOTE - NONE OF THE ABOVE WAYS TO CREATE THAT EXTRA FIELD-NAME ('imported_commodity_name') SHOULD BE USED - AS THE VALUE OF THIS WILL NOT GET PROPERYLY UPDATED WITH WHEN THE RELEVANT COMMODIY NAME IS CHANGED FROM THE COMMODITY MODULE (i.e. in the Commodiy schema the Commodiy's name is changed)
+
+### So HER WAS THE FINAL IMPLEMENTED SOLUTION THAT I USED WITH LODASH TO CHANGE THE RECEIVED DATA FORM MONGO (REFORMATTING IT BY ADDING A NEW FIELD) BEFORE SENDING THAT DATA TO THE CLIENT.
+
+```JS
+const _ = require("lodash");
+const flatMap = require("lodash/flatMap");
+
+const createAllocation = item => ({
+  _id: item._id,
+  exported_commodity_objectId: item.exported_commodity_objectId._id,
+  qty_in_mts: item.qty_in_mts,
+  exported_date: item.exported_date,
+  no_of_vessels_per_day: item.no_of_vessels_per_day,
+  exported_commodity_name: item.exported_commodity_objectId.name
+});
+
+// To GET ALL Exports without mongoose-paginate - Working in Postman*
+router.get("/", (req, res, next) => {
+  Export.find(
+    {},
+    null,
+    {
+      sort: { createdAt: -1 }
+    },
+    (err, docs) => {
+      if (err) {
+        return next(err);
+      } else {
+        const flatDocs = _.flatMap(docs, item => [createAllocation(item)]);
+        res.status(200).json(flatDocs);
+      }
+    }
+  );
+});
+
+```
+
+See details in - /home/paul/codes-Lap/React/Volteo/IES/IES-Rohan-WIP/server/routes/exportRoutes.js
 
 #### Other Reading sources
 
