@@ -1,4 +1,6 @@
 /* Problem Statement - I have to compare curent date-time with the one saved in mongo's ISO format for checking if a password-reset uid has expired. So if the 'resetPasswordExpires' is earlier than the current-time, I will consider that uid invalid. Normal checking was giving erroneous result. Here's the solution.
+
+CAUTIONARY NOTE - WHILE THIS CODE WORKS PERFECTLY IN A STANDALONE .js FILE, I HAVE HAD FEW CASES WITHIN AN ACTUAL APP, WHERE IT FAILED TO WORK
  */
 
 const actualMongoDB_data = [
